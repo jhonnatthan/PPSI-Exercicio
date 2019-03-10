@@ -96,6 +96,7 @@ button img {
     text-align: center;
     flex-grow: 1;
     padding: 10px;
+    cursor: pointer;
 }
 
 .todoNav li.active {

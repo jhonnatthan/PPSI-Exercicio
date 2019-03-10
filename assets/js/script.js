@@ -1,17 +1,5 @@
-let todos = [
-    {
-        id: generateUuid(),
-        name: 'Todo 1',
-        status: 'pending'
-    },
-    {
-        id: generateUuid(),
-        name: 'Todo 2',
-        status: 'pending'
-    }
-];
-
-let selectedCategory = '';
+// Variaveis da aplicação
+let todos = [];
 let navMenu = [
     { name: 'Todos', value: '' },
     { name: 'Pendentes', value: 'pending' },
@@ -23,22 +11,18 @@ let positionOptions = [
     { name: 'Fim', value: 'last' }
 ];
 
+// Função de início
 (function () {
-    montaHeader();
-    montaLista();
-    let storageTodos = recuperaDado('@app:todos');
-    if (storageTodos) todos = storageTodos;
-    montaOpcoes();
-    let navItems = document.querySelectorAll('.todoNav-item');
-    renderizaConteudo('', navItems[0]);
-    calcElPos();
+    renderizaHeader();
+    renderizaMain();
+    restauraDados();
+    renderizaSelects();
+    irParaTodos();
+    calcularPosElementos();
 })();
 
-function ativaMenu(el) {
-
-}
-
-function montaHeader() {
+// Renderização dos principais elementos da página
+function renderizaHeader() {
     let body = document.querySelector('body');
 
     let header = document.createElement('header');
@@ -100,7 +84,7 @@ function montaHeader() {
     body.appendChild(header);
 }
 
-function montaLista() {
+function renderizaMain() {
     let body = document.querySelector('body');
 
     let main = document.createElement('main');
@@ -146,7 +130,10 @@ function montaLista() {
     body.appendChild(main);
 }
 
-function montaOpcoes() {
+function renderizaSelects() {
+    let div = document.querySelector('.advanced');
+    div.innerHTML = '';
+
     let selectPosicao = document.createElement('select');
     selectPosicao.name = 'posicao';
     selectPosicao.id = 'posicao';
@@ -161,43 +148,56 @@ function montaOpcoes() {
         selectPosicao.appendChild(option);
     }
 
-    let selectTodo;
-    let filteredTodos = todos.filter(todo => todo.status != 'deleted');
-    if (filteredTodos.length > 1) {
-        let newOptions = [
-            { name: 'Antes de', value: 'before' },
-            { name: 'Depois de', value: 'after' }
-        ];
+    let selectTodo = document.createElement('select');
+    selectTodo.name = 'elemento';
+    selectTodo.id = 'elemento';
+    selectTodo.style.display = 'none';
 
-        for (let index = 0; index < newOptions.length; index++) {
-            const element = newOptions[index];
-            let option = document.createElement('option');
-            option.text = element.name;
-            option.value = element.value;
-
-            selectPosicao.appendChild(option);
-        }
-
-        selectTodo = document.createElement('select');
-        selectTodo.name = 'elemento';
-        selectTodo.id = 'elemento';
-        selectTodo.style.display = 'none';
-
+    if (validLenght() > 1) {
         for (let index = 0; index < filteredTodos.length; index++) {
             const element = filteredTodos[index];
             if (element.status !== 'deleted') {
-                let option = document.createElement('option');
-                option.text = element.name;
-                option.value = element.id;
 
+                let option = geraTodoOption(element);
                 selectTodo.appendChild(option);
             }
         }
     }
 
-    let div = document.querySelector('.advanced');
     div.appendChild(selectPosicao);
-    if (filteredTodos.length > 1) div.appendChild(selectTodo);
+    div.appendChild(selectTodo);
+
+    if (validLenght() > 1) adicionaNovasOpcoes();
+}
+
+function adicionaNovasOpcoes() {
+    let selectPosicao = document.querySelector('#posicao');
+
+    let newOptions = [
+        { name: 'Antes de', value: 'before' },
+        { name: 'Depois de', value: 'after' }
+    ];
+
+    for (let index = 0; index < newOptions.length; index++) {
+        const element = newOptions[index];
+        let option = document.createElement('option');
+        option.text = element.name;
+        option.value = element.value;
+
+        selectPosicao.appendChild(option);
+    }
+}
+
+function removeNovasOpcoes() {
+    let selectPosicao = document.querySelectorAll('#posicao option');
+
+    for (let index = 0; index < selectPosicao.length; index++) {
+        const element = selectPosicao[index];
+
+        if (element.value == 'after' || element.value == 'before') {
+            element.remove();
+        }
+    }
 }
 
 function renderizaConteudo(categoria, menuItem) {
@@ -220,13 +220,20 @@ function renderizaConteudo(categoria, menuItem) {
     for (let index = 0; index < filteredTodos.length; index++) {
         const element = filteredTodos[index];
 
-        let todoItem = geraTodo(element.name, element.id);
+        let todoItem = geraTodo(element);
         lst.appendChild(todoItem);
-        setTimeout(() => {
-            todoItem.classList.add('active');
-        }, 200);
-
     }
+}
+
+// Funções auxiliares
+function irParaTodos() {
+    let navItems = document.querySelectorAll('.todoNav-item');
+    renderizaConteudo('', navItems[0]);
+}
+
+function restauraDados() {
+    let storageTodos = recuperaDado('@app:todos');
+    if (storageTodos) todos = storageTodos;
 }
 
 function trocaInsercao() {
@@ -244,6 +251,7 @@ function exibeSeletor(status) {
     seletorElemento.style.display = status ? 'block' : 'none';
 }
 
+// Handler do Submit do formulário
 function insereTodo(ev) {
     let elementoId;
     let todoName = document.querySelector('#todo').value;
@@ -269,8 +277,6 @@ function insereTodo(ev) {
                 inserirFim(todoName);
                 break;
         }
-
-        console.log(todos);
     } else {
         alert('Preencha o campo antes de salvar!');
     }
@@ -278,98 +284,131 @@ function insereTodo(ev) {
     ev.preventDefault();
 }
 
+// Inserção do início da lista.
+// todoName: Nome do todo digitado no input
 function inserirInicio(todoName) {
+    if (validLenght() == 1) adicionaNovasOpcoes();
+
     let lstTodo = document.querySelector('#lstTodo');
     let todosEl = document.querySelectorAll('.todo-item');
+    let lstTodoOpt = document.querySelector('#elemento');
 
     let obj = {
         id: generateUuid(),
         name: todoName,
         status: 'pending'
     };
-    let newTodo = geraTodo(obj.name, obj.id);
+    let newTodo = geraTodo(obj);
+    let newTodoOpt = geraTodoOption(obj)
 
-    if(todosEl.length > 0) {
+    if (todosEl.length > 0) {
+        let firstOpt = lstTodoOpt.querySelector('option');
         lstTodo.insertBefore(newTodo, todosEl[0]);
+        lstTodoOpt.insertBefore(newTodoOpt, firstOpt);
 
         todos.unshift(obj);
     } else {
         lstTodo.appendChild(newTodo);
-
+        lstTodoOpt.appendChild(newTodoOpt);
         todos.push(obj);
     }
 
-    calcElPos();
+    calcularPosElementos();
 }
 
+// Inserção no final da lista.
+// todoName: Nome do todo digitado no input
 function inserirFim(todoName) {
+    if (validLenght() == 1) adicionaNovasOpcoes();
     let lstTodo = document.querySelector('#lstTodo');
+    let lstTodoOpt = document.querySelector('#elemento');
 
     let obj = {
         id: generateUuid(),
         name: todoName,
         status: 'pending'
     };
-    let newTodo = geraTodo(obj.name, obj.id);
+    let newTodo = geraTodo(obj);
+    let newTodoOpt = geraTodoOption(obj)
 
     lstTodo.appendChild(newTodo);
+    lstTodoOpt.appendChild(newTodoOpt);
 
     todos.push(obj);
 
-    calcElPos();
+    calcularPosElementos();
 }
 
+// Inserção antes de algum elemento na lista.
+// todoName: Nome do todo digitado no input
+// todoId: UUID (ID único) do elemento de referencia para ser inserido antes
 function inserirAntesDe(todoName, todoId) {
+    if (validLenght() == 1) adicionaNovasOpcoes();
     let lstTodo = document.querySelector('#lstTodo');
-    let todoEl = document.querySelector('[data-uuid="'+ todoId +'"]');
+    let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
+    let lstTodoOpt = document.querySelector('#elemento');
+    let optEl = lstTodoOpt.querySelector('option[value="' + todoId + '"]');
 
     let obj = {
         id: generateUuid(),
         name: todoName,
         status: 'pending'
     };
-    let newTodo = geraTodo(obj.name, obj.id);
+    let newTodo = geraTodo(obj);
+    let newTodoOpt = geraTodoOption(obj)
 
     lstTodo.insertBefore(newTodo, todoEl);
+    lstTodoOpt.insertBefore(newTodoOpt, optEl);
 
     todoElIndex = todos.findIndex(todo => todo.id == todoId);
 
-    console.log(todoElIndex);
-
     todos.splice(todoElIndex, 0, obj);
 
-    calcElPos();
+    calcularPosElementos();
 }
 
+// Inserção depois de algum elemento na lista.
+// todoName: Nome do todo digitado no input
+// todoId: UUID (ID único) do elemento de referencia para ser inserido antes
 function inserirDepoisDe(todoName, todoId) {
+    if (validLenght() == 1) adicionaNovasOpcoes();
     let lstTodo = document.querySelector('#lstTodo');
-    let todoEl = document.querySelector('[data-uuid="'+ todoId +'"]');
+    let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
+    let lstTodoOpt = document.querySelector('#elemento');
+    let optEl = lstTodoOpt.querySelector('option[value="' + todoId + '"]');
 
     let obj = {
         id: generateUuid(),
         name: todoName,
         status: 'pending'
     };
-    let newTodo = geraTodo(obj.name, obj.id);
+    let newTodo = geraTodo(obj);
+    let newTodoOpt = geraTodoOption(obj)
 
     lstTodo.insertBefore(newTodo, todoEl.nextSibling);
+    lstTodoOpt.insertBefore(newTodoOpt, optEl.nextSibling);
 
     todoElIndex = todos.findIndex(todo => todo.id == todoId);
     todos.splice(todoElIndex + 1, 0, obj);
 
-    calcElPos();
+    calcularPosElementos();
 }
 
-function removerTodo() {
+
+function removerTodo(todoId) {
+    if (validLenght() == 2) removeNovasOpcoes();
+    let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
 }
 
-function alterarTodo() {
+function alterarTodo(todoId) {
+    let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
 }
 
-function completarTodo() {
+function completarTodo(todoId) {
+    let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
 }
 
-function calcElPos() {
+function calcularPosElementos() {
     let todosEl = document.querySelectorAll('.todo-item');
 
     for (let index = 0; index < todosEl.length; index++) {
@@ -393,32 +432,32 @@ function buscaTodo(ev) {
     ev.preventDefault();
 }
 
-function geraTodo(todo, uiid) {
+function geraTodo(obj) {
     let li = document.createElement('li');
-    li.classList.add('todo-item');
-    li.setAttribute('data-uuid', uiid);
+    li.classList.add('todo-item', obj.status);
+    li.setAttribute('data-uuid', obj.id);
 
     let fDiv = document.createElement('div');
     fDiv.classList.add('titulo');
-    fDiv.innerHTML = todo;
+    fDiv.innerHTML = obj.name;
 
     let sDiv = document.createElement('div');
 
     let buttonRemove = document.createElement('button');
     buttonRemove.classList.add('remove');
-    buttonRemove.setAttribute('onclick', 'removerTodo(this)');
+    buttonRemove.setAttribute('onclick', 'removerTodo(' + obj.id + ')');
     let imgRemove = document.createElement('img');
     imgRemove.src = 'assets/img/trash.svg';
 
     let buttonEdit = document.createElement('button');
     buttonEdit.classList.add('edit');
-    buttonEdit.setAttribute('onclick', 'alterarTodo(this)');
+    buttonEdit.setAttribute('onclick', 'alterarTodo(' + obj.id + ')');
     let imgEdit = document.createElement('img');
     imgEdit.src = 'assets/img/pencil.svg';
 
     let buttonComplete = document.createElement('button');
     buttonComplete.classList.add('complete');
-    buttonComplete.setAttribute('onclick', 'completarTodo(this)');
+    buttonComplete.setAttribute('onclick', 'completarTodo(' + obj.id + ')');
     let imgComplete = document.createElement('img');
     imgComplete.src = 'assets/img/checked.svg';
 
@@ -431,12 +470,24 @@ function geraTodo(todo, uiid) {
     li.appendChild(fDiv);
     li.appendChild(sDiv);
 
-    
+
     setTimeout(() => {
         li.classList.add('active');
     }, 250);
 
-    return li;    
+    return li;
+}
+
+function validLenght() {
+    return todos.filter(todo => todo.status != 'deleted').length;
+}
+
+function geraTodoOption(obj) {
+    let option = document.createElement('option');
+    option.text = obj.name;
+    option.value = obj.id;
+
+    return option;
 }
 
 function gravaDado(nome, dado) {
