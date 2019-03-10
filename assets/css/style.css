@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css?family=Lato');
-
 * {
     box-sizing: border-box;
     padding: 0;
@@ -15,45 +14,220 @@ body {
 
 main {
     width: 100%;
-    max-width: 600px;
     margin: 0 auto;
-    min-height: 100vh;
-    padding: 6px;
     display: flex;
     align-items: center;
     flex-direction: column;
-    padding-top: 100px;
+}
+
+button img {
+    width: 24px;
+    height: 24px;
+    padding: 3px;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
 }
 
 .searchSection {
+    display: flex;
     width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
     background-color: #3171e0;
-    padding: 10px;
-    border-radius: 5px;
     margin-bottom: 20px;
+    padding-bottom: 0;
 }
 
 #searchForm {
     position: relative;
-}
-
-#searchForm input {
     width: 100%;
     padding: 10px;
-    height: 35px;
-    padding-left: 35px;
-    border-radius: 5px;
-}
-
-.searchIcon {
-    content: '';
-    position: absolute;
     display: flex;
     justify-content: center;
     align-items: center;
-    top: 6px;
-    left: 6px;
-    height: 25px;
-    width: 25px;
-    background-image: url(../img/search.svg);
+    background-color: rgba(0, 0, 0, .3);
+    border-radius: 5px;
+}
+
+#searchForm input {
+    flex-grow: 1;
+    margin: 0 auto;
+    font-size: 1rem;
+    border-radius: 5px;
+    padding: 0 10px;
+    color: white;
+    background: transparent;
+}
+
+#searchForm input::placeholder {
+    color: rgba(255, 255, 255, .8);
+    font-size: 1rem;
+}
+
+#searchForm button {
+    height: 24px;
+    width: 24px;
+    background: transparent;
+}
+
+.todoNav {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.todoNav ul {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    overflow-x: auto;
+}
+
+.todoNav ul::-webkit-scrollbar {
+    height: 0;
+}
+
+.todoNav li {
+    color: white;
+    text-align: center;
+    flex-grow: 1;
+    padding: 10px;
+}
+
+.todoNav li.active {
+    font-weight: bold;
+    border-bottom: 3px solid white;
+}
+
+.todoList {
+    margin-top: 25px;
+    border-radius: 5px;
+}
+
+.todoList ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+#addForm {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 15px;
+    background-color: #3171e0;
+    border-radius: 10px 10px 0 0;
+}
+
+#addForm div {
+    display: flex;
+}
+
+#addForm div:last-child {
+    margin-top: 20px;
+}
+
+#addForm p {
+    margin-bottom: 15px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+
+#addForm input {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 5px;
+    margin-right: 10px;
+    background-color: white;
+    color: #232323;
+}
+
+#addForm select {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: white;
+    color: #232323;
+}
+
+#addForm select:last-child {
+    margin-left: 10px;
+}
+
+#addForm button {
+    padding: 10px 20px;
+    background-color: white;
+    border-radius: 5px;
+}
+
+#lstTodo {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 0 0 10px 10px;
+    min-height: 57px;
+}
+
+#lstTodo li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: height 250ms, opacity 250ms, padding 250ms;
+    will-change: height, opacity, padding;
+}
+
+#lstTodo li.active {
+    height: 57px;
+    padding: 15px;
+    opacity: 1;
+    pointer-events: all;
+    transition: height 250ms, opacity 250ms;
+    will-change: height, opacity;
+}
+
+#lstTodo li.active:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, .8);
+}
+
+#lstTodo .checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #3171e0;
+    background-color: white;
+    margin-right: 10px;
+}
+
+#lstTodo .titulo {
+    flex: 1;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#lstTodo button {
+    background-color: transparent;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.todo-item.pending {
+    color: #3171e0;
+}
+
+.todo-item.removed {
+    color: #dc3545;
+}
+
+.todo-item.completed {
+    color: #28a745;
 }
