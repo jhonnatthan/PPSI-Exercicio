@@ -215,6 +215,10 @@ button img {
     text-overflow: ellipsis;
 }
 
+#lstTodo .titulo.editing {
+    border-bottom: 1px solid rgba(0, 0, 0, .3);
+}
+
 #lstTodo button {
     background-color: transparent;
     cursor: pointer;

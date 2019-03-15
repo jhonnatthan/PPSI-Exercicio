@@ -17,8 +17,7 @@ let positionOptions = [
     renderizaMain();
     restauraDados();
     renderizaSelects();
-    irParaTodos();
-    calcularPosElementos();
+    renderizaConteudo();
 })();
 
 // Renderização dos principais elementos da página
@@ -37,7 +36,7 @@ function renderizaHeader() {
     let form = document.createElement('form');
     form.classList.add('searchForm');
     form.id = 'searchForm';
-    form.setAttribute('onsubmit', 'buscaTodo(event)');
+    form.setAttribute('onsubmit', 'buscaTodo(event, this)');
 
     let buttonSearch = document.createElement('button');
     let imgSearch = document.createElement('img');
@@ -66,7 +65,7 @@ function renderizaHeader() {
         if (index == 0) li.classList.add('active');
         li.setAttribute('data-category', element.value);
         li.innerHTML = element.name;
-        li.setAttribute('onclick', 'renderizaConteudo("' + element.value + '", this)');
+        li.setAttribute('onclick', 'mudaFiltro(this)');
         ul.appendChild(li);
     }
 
@@ -186,6 +185,8 @@ function adicionaNovasOpcoes() {
 
         selectPosicao.appendChild(option);
     }
+    
+    exibeSeletor(true);
 }
 
 function removeNovasOpcoes() {
@@ -198,37 +199,55 @@ function removeNovasOpcoes() {
             element.remove();
         }
     }
+
+    exibeSeletor(false);
 }
 
-function renderizaConteudo(categoria, menuItem) {
+function renderizaConteudo() {
+    let filteredTodos = todos;
+
+    let searchForm = document.querySelector('#searchForm');
+    let searchInput = searchForm.querySelector('input');
+    let s = searchInput.value;
+
+    if(s != '') {
+        filteredTodos = filteredTodos.filter(todo => todo.name.indexOf(s) > -1);
+    }
+
+    let navItem = document.querySelector('.todoNav-item.active');
+    let categoria = navItem.getAttribute('data-category');
+
+    if (categoria != '') {
+        filteredTodos = filteredTodos.filter(todo => todo.status == categoria);
+    }
+
+    let lst = document.querySelector('#lstTodo');
+    lst.innerHTML = null;
+
+    for (let index = 0; index < filteredTodos.length; index++) {
+        const element = filteredTodos[index];
+
+        let obj = {
+            id: element.id,
+            name: element.name,
+            status: element.status
+        };
+
+        let todoItem = geraTodo(obj);
+        lst.appendChild(todoItem);
+    }
+}
+
+// Funções auxiliares
+
+function mudaFiltro(menuItem) {
     let navItems = document.querySelectorAll('.todoNav-item');
     for (let index = 0; index < navItems.length; index++) {
         const element = navItems[index];
         element.classList.remove('active');
     }
     menuItem.classList.add('active');
-
-    let lst = document.querySelector('#lstTodo');
-    lst.innerHTML = null;
-    let filteredTodos;
-    if (categoria != '') {
-        filteredTodos = todos.filter(todo => todo.status == categoria);
-    } else {
-        filteredTodos = todos;
-    }
-
-    for (let index = 0; index < filteredTodos.length; index++) {
-        const element = filteredTodos[index];
-
-        let todoItem = geraTodo(element);
-        lst.appendChild(todoItem);
-    }
-}
-
-// Funções auxiliares
-function irParaTodos() {
-    let navItems = document.querySelectorAll('.todoNav-item');
-    renderizaConteudo('', navItems[0]);
+    renderizaConteudo();
 }
 
 function restauraDados() {
@@ -254,29 +273,44 @@ function exibeSeletor(status) {
 // Handler do Submit do formulário
 function insereTodo(ev) {
     let elementoId;
-    let todoName = document.querySelector('#todo').value;
+    let todoEl = document.querySelector('#todo');
+    let todoName = todoEl.value;
 
     if (todoName != '') {
+
+        let obj = {
+            id: generateUuid(),
+            name: todoName,
+            status: 'pending'
+        };
+
+        let tObj = {
+            todoEl: geraTodo(obj),
+            todoOptEl: geraTodoOption(obj),
+            obj
+        };
+
         let posicao = document.querySelector('#posicao').value;
         switch (posicao) {
             case 'first':
-                inserirInicio(todoName);
+                inserirInicio(tObj);
                 break;
             case 'last':
-                inserirFim(todoName)
+                inserirFim(tObj)
                 break;
             case 'before':
                 elementoId = document.querySelector('#elemento').value;
-                inserirAntesDe(todoName, elementoId);
+                inserirAntesDe(tObj, elementoId);
                 break;
             case 'after':
                 elementoId = document.querySelector('#elemento').value;
-                inserirDepoisDe(todoName, elementoId);
+                inserirDepoisDe(tObj, elementoId);
                 break;
             default:
-                inserirFim(todoName);
+                inserirFim(tObj);
                 break;
         }
+        todoEl.value = '';
     } else {
         alert('Preencha o campo antes de salvar!');
     }
@@ -286,139 +320,133 @@ function insereTodo(ev) {
 
 // Inserção do início da lista.
 // todoName: Nome do todo digitado no input
-function inserirInicio(todoName) {
+function inserirInicio(tObj) {
     if (validLenght() == 1) adicionaNovasOpcoes();
 
     let lstTodo = document.querySelector('#lstTodo');
     let todosEl = document.querySelectorAll('.todo-item');
     let lstTodoOpt = document.querySelector('#elemento');
 
-    let obj = {
-        id: generateUuid(),
-        name: todoName,
-        status: 'pending'
-    };
-    let newTodo = geraTodo(obj);
-    let newTodoOpt = geraTodoOption(obj)
-
     if (todosEl.length > 0) {
         let firstOpt = lstTodoOpt.querySelector('option');
-        lstTodo.insertBefore(newTodo, todosEl[0]);
-        lstTodoOpt.insertBefore(newTodoOpt, firstOpt);
+        lstTodo.insertBefore(tObj.todoEl, todosEl[0]);
+        lstTodoOpt.insertBefore(tObj.todoOptEl, firstOpt);
 
-        todos.unshift(obj);
+        todos.unshift(tObj.obj);
     } else {
-        lstTodo.appendChild(newTodo);
-        lstTodoOpt.appendChild(newTodoOpt);
-        todos.push(obj);
+        lstTodo.appendChild(tObj.todoEl);
+        lstTodoOpt.appendChild(tObj.todoOptEl);
+        todos.push(tObj.obj);
     }
 
-    calcularPosElementos();
 }
 
 // Inserção no final da lista.
 // todoName: Nome do todo digitado no input
-function inserirFim(todoName) {
+function inserirFim(tObj) {
     if (validLenght() == 1) adicionaNovasOpcoes();
     let lstTodo = document.querySelector('#lstTodo');
     let lstTodoOpt = document.querySelector('#elemento');
 
-    let obj = {
-        id: generateUuid(),
-        name: todoName,
-        status: 'pending'
-    };
-    let newTodo = geraTodo(obj);
-    let newTodoOpt = geraTodoOption(obj)
+    lstTodo.appendChild(tObj.todoEl);
+    lstTodoOpt.appendChild(tObj.todoOptEl);
 
-    lstTodo.appendChild(newTodo);
-    lstTodoOpt.appendChild(newTodoOpt);
-
-    todos.push(obj);
-
-    calcularPosElementos();
+    todos.push(tObj.obj);
 }
 
 // Inserção antes de algum elemento na lista.
 // todoName: Nome do todo digitado no input
 // todoId: UUID (ID único) do elemento de referencia para ser inserido antes
-function inserirAntesDe(todoName, todoId) {
+function inserirAntesDe(tObj, todoId) {
     if (validLenght() == 1) adicionaNovasOpcoes();
     let lstTodo = document.querySelector('#lstTodo');
     let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
     let lstTodoOpt = document.querySelector('#elemento');
     let optEl = lstTodoOpt.querySelector('option[value="' + todoId + '"]');
 
-    let obj = {
-        id: generateUuid(),
-        name: todoName,
-        status: 'pending'
-    };
-    let newTodo = geraTodo(obj);
-    let newTodoOpt = geraTodoOption(obj)
-
-    lstTodo.insertBefore(newTodo, todoEl);
-    lstTodoOpt.insertBefore(newTodoOpt, optEl);
+    lstTodo.insertBefore(tObj.todoEl, todoEl);
+    lstTodoOpt.insertBefore(tObj.todoOptEl, optEl);
 
     todoElIndex = todos.findIndex(todo => todo.id == todoId);
 
-    todos.splice(todoElIndex, 0, obj);
-
-    calcularPosElementos();
+    todos.splice(todoElIndex, 0, tObj.obj);
 }
 
 // Inserção depois de algum elemento na lista.
 // todoName: Nome do todo digitado no input
 // todoId: UUID (ID único) do elemento de referencia para ser inserido antes
-function inserirDepoisDe(todoName, todoId) {
+function inserirDepoisDe(tObj, todoId) {
     if (validLenght() == 1) adicionaNovasOpcoes();
     let lstTodo = document.querySelector('#lstTodo');
     let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
     let lstTodoOpt = document.querySelector('#elemento');
     let optEl = lstTodoOpt.querySelector('option[value="' + todoId + '"]');
 
-    let obj = {
-        id: generateUuid(),
-        name: todoName,
-        status: 'pending'
-    };
-    let newTodo = geraTodo(obj);
-    let newTodoOpt = geraTodoOption(obj)
-
-    lstTodo.insertBefore(newTodo, todoEl.nextSibling);
-    lstTodoOpt.insertBefore(newTodoOpt, optEl.nextSibling);
+    lstTodo.insertBefore(tObj.todoEl, todoEl.nextSibling);
+    lstTodoOpt.insertBefore(tObj.todoOptEl, optEl.nextSibling);
 
     todoElIndex = todos.findIndex(todo => todo.id == todoId);
-    todos.splice(todoElIndex + 1, 0, obj);
+    todos.splice(todoElIndex + 1, 0, tObj.obj);
 
-    calcularPosElementos();
 }
 
 
 function removerTodo(todoId) {
-    if (validLenght() == 2) removeNovasOpcoes();
-    let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
+    if (validLenght() == 2) {
+        removeNovasOpcoes();
+        let posicaoTodo = document.querySelector('#posicao');
+        if(posicaoTodo.selectedIndex  > 1) {
+            posicaoTodoselectedIndex = 0;
+        }
+    };
+
+    let todoIndex = todos.findIndex(todo => todo.id == todoId);
+    todos[todoIndex].status = 'deleted';
+
+    renderizaConteudo();
 }
 
 function alterarTodo(todoId) {
     let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
+
+    let options = todoEl.querySelector('.todoOptions');
+    options.style.display = 'none';
+
+    let editOptions = todoEl.querySelector('.todoEditOptions');
+    editOptions.style.display = 'block';
+
+    let input = todoEl.querySelector('input');
+    input.removeAttribute('readonly');
+    input.focus();
+    input.classList.add('editing');
 }
+
+function completarEdicao(todoId) {
+    let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
+
+    let input = todoEl.querySelector('input');
+    input.blur();
+    input.classList.remove('editing');
+    input.setAttribute('readonly', true);
+
+    let editOptions = todoEl.querySelector('.todoEditOptions');
+    editOptions.style.display = 'none';
+
+    let options = todoEl.querySelector('.todoOptions');
+    options.style.display = 'block';
+
+    let todoIndex = todos.findIndex(todo => todo.id = todoId);
+    todos[todoIndex].name = input.value;
+}
+
 
 function completarTodo(todoId) {
     let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
-}
 
-function calcularPosElementos() {
-    let todosEl = document.querySelectorAll('.todo-item');
+    let todoIndex = todos.findIndex(todo => todo.id = todoId);
+    todos[todoIndex].status = 'completed';
 
-    for (let index = 0; index < todosEl.length; index++) {
-        const element = todosEl[index];
-        element.setAttribute('data-epos', index);
-    }
-}
-
-function calcElArrayPos() {
-
+    renderizaConteudo();
 }
 
 function generateUuid() {
@@ -428,7 +456,8 @@ function generateUuid() {
     });
 }
 
-function buscaTodo(ev) {
+function buscaTodo(ev, form) {
+    renderizaConteudo();
     ev.preventDefault();
 }
 
@@ -437,39 +466,53 @@ function geraTodo(obj) {
     li.classList.add('todo-item', obj.status);
     li.setAttribute('data-uuid', obj.id);
 
-    let fDiv = document.createElement('div');
-    fDiv.classList.add('titulo');
-    fDiv.innerHTML = obj.name;
+    let input = document.createElement('input');
+    input.classList.add('titulo');
+    input.setAttribute('readonly', true);
+    input.value = obj.name;
 
     let sDiv = document.createElement('div');
+    sDiv.classList.add('todoOptions');
 
     let buttonRemove = document.createElement('button');
     buttonRemove.classList.add('remove');
-    buttonRemove.setAttribute('onclick', 'removerTodo(' + obj.id + ')');
+    buttonRemove.setAttribute('onclick', 'removerTodo("' + obj.id + '")');
     let imgRemove = document.createElement('img');
     imgRemove.src = 'assets/img/trash.svg';
 
     let buttonEdit = document.createElement('button');
     buttonEdit.classList.add('edit');
-    buttonEdit.setAttribute('onclick', 'alterarTodo(' + obj.id + ')');
+    buttonEdit.setAttribute('onclick', 'alterarTodo("' + obj.id + '")');
     let imgEdit = document.createElement('img');
     imgEdit.src = 'assets/img/pencil.svg';
 
     let buttonComplete = document.createElement('button');
     buttonComplete.classList.add('complete');
-    buttonComplete.setAttribute('onclick', 'completarTodo(' + obj.id + ')');
+    buttonComplete.setAttribute('onclick', 'completarTodo("' + obj.id + '")');
     let imgComplete = document.createElement('img');
     imgComplete.src = 'assets/img/checked.svg';
+
+    let tDiv = document.createElement('div');
+    tDiv.classList.add('todoEditOptions');
+    tDiv.style.display = 'none';    
+
+    let buttonEditComplete = document.createElement('button');
+    buttonEditComplete.classList.add('complete');
+    buttonEditComplete.setAttribute('onclick', 'completarEdicao("' + obj.id + '")');
+    let imgEditComplete = document.createElement('img');
+    imgEditComplete.src = 'assets/img/checked.svg';
 
     buttonRemove.appendChild(imgRemove);
     buttonEdit.appendChild(imgEdit);
     buttonComplete.appendChild(imgComplete);
+    buttonEditComplete.appendChild(imgEditComplete);
     sDiv.appendChild(buttonRemove);
     sDiv.appendChild(buttonEdit);
     sDiv.appendChild(buttonComplete);
-    li.appendChild(fDiv);
+    tDiv.appendChild(buttonEditComplete);
+    li.appendChild(input);
     li.appendChild(sDiv);
-
+    li.appendChild(tDiv);
 
     setTimeout(() => {
         li.classList.add('active');
