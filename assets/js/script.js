@@ -39,6 +39,7 @@ function renderizaHeader() {
     form.setAttribute('onsubmit', 'buscaTodo(event, this)');
 
     let buttonSearch = document.createElement('button');
+    buttonSearch.type = 'submit';
     let imgSearch = document.createElement('img');
     imgSearch.src = 'assets/img/search.svg';
 
@@ -48,6 +49,7 @@ function renderizaHeader() {
     inputSearch.placeholder = 'Pesquisar todo...';
 
     let buttonClear = document.createElement('button');
+    buttonClear.type = 'reset';
     let imgClear = document.createElement('img');
     imgClear.src = 'assets/img/times.svg';
 
@@ -311,6 +313,7 @@ function insereTodo(ev) {
                 break;
         }
         todoEl.value = '';
+        renderizaConteudo();
     } else {
         alert('Preencha o campo antes de salvar!');
     }
@@ -323,19 +326,17 @@ function insereTodo(ev) {
 function inserirInicio(tObj) {
     if (validLenght() == 1) adicionaNovasOpcoes();
 
-    let lstTodo = document.querySelector('#lstTodo');
     let todosEl = document.querySelectorAll('.todo-item');
     let lstTodoOpt = document.querySelector('#elemento');
 
     if (todosEl.length > 0) {
         let firstOpt = lstTodoOpt.querySelector('option');
-        lstTodo.insertBefore(tObj.todoEl, todosEl[0]);
         lstTodoOpt.insertBefore(tObj.todoOptEl, firstOpt);
 
         todos.unshift(tObj.obj);
     } else {
-        lstTodo.appendChild(tObj.todoEl);
         lstTodoOpt.appendChild(tObj.todoOptEl);
+
         todos.push(tObj.obj);
     }
 
@@ -345,10 +346,8 @@ function inserirInicio(tObj) {
 // todoName: Nome do todo digitado no input
 function inserirFim(tObj) {
     if (validLenght() == 1) adicionaNovasOpcoes();
-    let lstTodo = document.querySelector('#lstTodo');
     let lstTodoOpt = document.querySelector('#elemento');
 
-    lstTodo.appendChild(tObj.todoEl);
     lstTodoOpt.appendChild(tObj.todoOptEl);
 
     todos.push(tObj.obj);
@@ -359,12 +358,9 @@ function inserirFim(tObj) {
 // todoId: UUID (ID único) do elemento de referencia para ser inserido antes
 function inserirAntesDe(tObj, todoId) {
     if (validLenght() == 1) adicionaNovasOpcoes();
-    let lstTodo = document.querySelector('#lstTodo');
-    let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
     let lstTodoOpt = document.querySelector('#elemento');
     let optEl = lstTodoOpt.querySelector('option[value="' + todoId + '"]');
 
-    lstTodo.insertBefore(tObj.todoEl, todoEl);
     lstTodoOpt.insertBefore(tObj.todoOptEl, optEl);
 
     todoElIndex = todos.findIndex(todo => todo.id == todoId);
@@ -377,12 +373,9 @@ function inserirAntesDe(tObj, todoId) {
 // todoId: UUID (ID único) do elemento de referencia para ser inserido antes
 function inserirDepoisDe(tObj, todoId) {
     if (validLenght() == 1) adicionaNovasOpcoes();
-    let lstTodo = document.querySelector('#lstTodo');
-    let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
     let lstTodoOpt = document.querySelector('#elemento');
     let optEl = lstTodoOpt.querySelector('option[value="' + todoId + '"]');
 
-    lstTodo.insertBefore(tObj.todoEl, todoEl.nextSibling);
     lstTodoOpt.insertBefore(tObj.todoOptEl, optEl.nextSibling);
 
     todoElIndex = todos.findIndex(todo => todo.id == todoId);
