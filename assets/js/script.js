@@ -154,16 +154,14 @@ function renderizaSelects() {
     selectTodo.id = 'elemento';
     selectTodo.style.display = 'none';
     
-    let filteredTodos = todos.filter(todo => todo.status != 'deleted');
+    let filteredTodos = todos;
 
-    if (validLenght() > 1) {
-        for (let index = 0; index < filteredTodos.length; index++) {
-            const element = filteredTodos[index];
-            if (element.status !== 'deleted') {
+    for (let index = 0; index < filteredTodos.length; index++) {
+        const element = filteredTodos[index];
+        if (element.status !== 'deleted') {
 
-                let option = geraTodoOption(element);
-                selectTodo.appendChild(option);
-            }
+            let option = geraTodoOption(element);
+            selectTodo.appendChild(option);
         }
     }
 

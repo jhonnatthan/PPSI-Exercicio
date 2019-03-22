@@ -225,14 +225,14 @@ button img {
     margin-left: 10px;
 }
 
-.todo-item.pending {
+.todo-item.pending input {
     color: #3171e0;
 }
 
-.todo-item.removed {
+.todo-item.deleted input {
     color: #dc3545;
 }
 
-.todo-item.completed {
+.todo-item.completed input {
     color: #28a745;
 }
