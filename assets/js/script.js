@@ -153,16 +153,11 @@ function renderizaSelects() {
     selectTodo.name = 'elemento';
     selectTodo.id = 'elemento';
     selectTodo.style.display = 'none';
-    
-    let filteredTodos = todos;
 
-    for (let index = 0; index < filteredTodos.length; index++) {
-        const element = filteredTodos[index];
-        if (element.status !== 'deleted') {
-
-            let option = geraTodoOption(element);
-            selectTodo.appendChild(option);
-        }
+    for (let index = 0; index < todos.length; index++) {
+        const element = todos[index];
+        let option = geraTodoOption(element);
+        selectTodo.appendChild(option);
     }
 
     div.appendChild(selectPosicao);
@@ -439,7 +434,7 @@ function completarEdicao(todoId) {
 function completarTodo(todoId) {
     let todoEl = document.querySelector('[data-uuid="' + todoId + '"]');
 
-    let todoIndex = todos.findIndex(todo => todo.id = todoId);
+    let todoIndex = todos.findIndex(todo => todo.id == todoId);
     todos[todoIndex].status = 'completed';
 
     renderizaConteudo();
@@ -519,7 +514,7 @@ function geraTodo(obj) {
 }
 
 function validLenght() {
-    return todos.filter(todo => todo.status != 'deleted').length;
+    return todos.length;
 }
 
 function geraTodoOption(obj) {
