@@ -13,9 +13,9 @@ let positionOptions = [
 
 // Função de início
 (function () {
+    restauraDados();
     renderizaHeader();
     renderizaMain();
-    restauraDados();
     renderizaSelects();
     renderizaConteudo();
 })();
@@ -153,6 +153,8 @@ function renderizaSelects() {
     selectTodo.name = 'elemento';
     selectTodo.id = 'elemento';
     selectTodo.style.display = 'none';
+    
+    let filteredTodos = todos.filter(todo => todo.status != 'deleted');
 
     if (validLenght() > 1) {
         for (let index = 0; index < filteredTodos.length; index++) {
@@ -206,6 +208,7 @@ function removeNovasOpcoes() {
 }
 
 function renderizaConteudo() {
+    console.log(todos);
     let filteredTodos = todos;
 
     let searchForm = document.querySelector('#searchForm');
@@ -314,6 +317,7 @@ function insereTodo(ev) {
         }
         todoEl.value = '';
         renderizaConteudo();
+        gravaDado('@app:todos', todos);
     } else {
         alert('Preencha o campo antes de salvar!');
     }
@@ -397,6 +401,7 @@ function removerTodo(todoId) {
     todos[todoIndex].status = 'deleted';
 
     renderizaConteudo();
+    gravaDado('@app:todos', todos);
 }
 
 function alterarTodo(todoId) {
@@ -429,7 +434,6 @@ function completarEdicao(todoId) {
     options.style.display = 'block';
 
     let todoIndex = todos.findIndex(todo => todo.id == todoId);
-    console.log(todoIndex, todos[todoIndex]);
     todos[todoIndex].name = input.value;
 }
 
@@ -441,6 +445,7 @@ function completarTodo(todoId) {
     todos[todoIndex].status = 'completed';
 
     renderizaConteudo();
+    gravaDado('@app:todos', todos);
 }
 
 function generateUuid() {
