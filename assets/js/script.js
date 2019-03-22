@@ -428,7 +428,8 @@ function completarEdicao(todoId) {
     let options = todoEl.querySelector('.todoOptions');
     options.style.display = 'block';
 
-    let todoIndex = todos.findIndex(todo => todo.id = todoId);
+    let todoIndex = todos.findIndex(todo => todo.id == todoId);
+    console.log(todoIndex, todos[todoIndex]);
     todos[todoIndex].name = input.value;
 }
 
